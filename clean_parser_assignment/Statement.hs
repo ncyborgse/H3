@@ -18,7 +18,7 @@ data Statement =
     deriving Show                       -- implementatio av show-klassen för Statement (värde till sträng)
 
 
--- Parsing
+----- Parsing Functions (3b) -----
 
 assignment = word #- accept ":=" # Expr.parse #- require ";" >-> buildAss
 buildAss (v, e) = Assignment v e
@@ -41,6 +41,8 @@ readStatement = accept "read" -# word #- require ";" >-> Read
 
 writeStatement = accept "write" -# Expr.parse #- require ";" >-> Write
 
+
+----- The Function exec (3d) -----
 
 exec :: [T] -> Dictionary.T String Integer -> [Integer] -> [Integer]
 exec [] _ _ = []
@@ -66,10 +68,11 @@ exec (Read var : stmts) dict (i:is) =
     let newDict = Dictionary.insert (var, i) dict
     in exec stmts newDict is
 
-
 exec (Write expr : stmts) dict input =
-  Expr.value expr dict : exec stmts dict input
+  Expr.value expr dict : exec stmts dict input  -- lägget till output:en först i listan och kör vidare med resten av statementsen
 
+
+----- Define Parse (3c) -----
 
 instance Parse Statement where
   parse = assignment ! skipStatement ! beginStatement ! ifStatement ! whileStatement ! readStatement ! writeStatement

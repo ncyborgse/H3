@@ -1,5 +1,6 @@
-module CoreParser(Parser, char, return, fail, (#), (!), (?), (#>), (>->),
-                  Parse, parse, toString, fromString) where
+--module CoreParser(Parser, char, return, fail, (#), (!), (?), (#>), (>->),
+--                 Parse, parse, toString, fromString) where
+module CoreParser where
 import Prelude hiding (return, fail)
 infixl 3 ! 
 infixl 7 ?
@@ -40,6 +41,7 @@ fail cs = Nothing
     Nothing -> Nothing
     Just(r, s) -> if p r then Just(r, s) else Nothing
 
+-- keeps the result from both parsers in a parser tuple 
 (#) :: Parser a -> Parser b -> Parser (a, b)
 (m # n) cs = 
     case m cs of
@@ -49,6 +51,7 @@ fail cs = Nothing
         Nothing -> Nothing
         Just(b, cs'') -> Just((a, b), cs'')
 
+-- >-> applies a function on a parser and returns a parser
 (>->) :: Parser a -> (a -> b) -> Parser b
 (m >-> b) cs = 
     case m cs of

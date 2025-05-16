@@ -1,6 +1,7 @@
-module Parser(module CoreParser, T, digit, digitVal, chars, letter, err,
-              lit, number, iter, accept, require, token,
-              spaces, word, (-#), (#-)) where
+--module Parser(module CoreParser, T, digit, digitVal, chars, letter, err,               lit, number, iter, accept, require, token,
+--              spaces, word, (-#), (#-)) where
+
+module Parser where
 import Prelude hiding (return, fail)
 import Data.Char
 import CoreParser
@@ -31,10 +32,14 @@ iter m = m # iter m >-> cons ! return []
 cons(a, b) = a:b
 
 (-#) :: Parser a -> Parser b -> Parser b
-m -# n = error "-# not implemented"
+m -# n = (m # n) >-> snd
+-- >-> applies a function on a parser and returns a parser
+-- snd takes the second element in a tuple, snd (x, y) = y
 
 (#-) :: Parser a -> Parser b -> Parser a
-m #- n = error "#- not implemented"
+m #- n = (m # n) >-> fst
+-- fst takes the first element in a tuple, fst (x, y) = x
+
 
 spaces :: Parser String
 spaces =  iter (char ? isSpaces)
@@ -44,7 +49,7 @@ token m = m #- spaces
 
 letter :: Parser Char --(String -> Maybe(Char, String))
 letter =  char ? isAlpha
---
+
 -- letter "abc"
 -- görs i char dvs char "abc": 
 -- Just ('a', "bc")
@@ -64,7 +69,7 @@ chars n = char # chars (n-1) >-> cons
 --
 --chars 3 "abcde"     -- Just ("abc", "de")
 --chars 3 "ab"        -- Nothing (bara 2 tecken)
---chars 0 "abc"       -- Just ("", "abc") — 0 tecken funkar
+--chars 0 "abc"       -- Just ("", "abc")
 
 
 accept :: String -> Parser String

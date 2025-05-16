@@ -4,22 +4,22 @@ module Expr(Expr, T, parse, fromString, value, toString) where
    An expression of type Expr is a representation of an arithmetic expression 
    with integer constants and variables. A variable is a string of upper- 
    and lower case letters. The following functions are exported
-   
+
    parse :: Parser Expr
    fromString :: String -> Expr
    toString :: Expr -> String
    value :: Expr -> Dictionary.T String Int -> Int
-   
+
    parse is a parser for expressions as defined by the module Parser.
    It is suitable for use in parsers for languages containing expressions
    as a sublanguage.
-   
+
    fromString expects its argument to contain an expression and returns the 
    corresponding Expr. 
-  
+
    toString converts an expression to a string without unneccessary 
    parentheses and such that fromString (toString e) = e.
-  
+
    value e env evaluates e in an environment env that is represented by a
    Dictionary.T Int.  
 -}
@@ -71,7 +71,22 @@ shw prec (Mul t u) = parens (prec>6) (shw 6 t ++ "*" ++ shw 6 u)
 shw prec (Div t u) = parens (prec>6) (shw 6 t ++ "/" ++ shw 7 u)
 
 value :: Expr -> Dictionary.T String Integer -> Integer
-value (Num n) _ = error "value not implemented"
+value (Num n) _ = n             -- return number if input is number
+
+value (Var name) dict = 
+        case Dictionary.lookup name dict of -- ger maybe integer som antingen är just X eller Nothing
+                Just val -> val
+                Nothing -> error ("Variable" ++ name ++ " not found.")
+
+value (Add e1 e2) dict = value e1 dict + value e2 dict
+value (Sub e1 e2) dict = value e1 dict - value e2 dict
+value (Mul e1 e2) dict = value e1 dict * value e2 dict
+
+value (Div e1 e2) dict =
+        let v2 = value e2 dict
+        in if v2 == 0
+                then error "Division by zero"
+                else value e1 dict `div` v2
 
 instance Parse Expr where
     parse = expr

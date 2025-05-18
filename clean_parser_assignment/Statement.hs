@@ -15,6 +15,7 @@ data Statement =
     | While Expr.T Statement            -- while ( Expr.T ) do Statement
     | Read String                       -- läser tar från input till variabel
     | Write Expr.T                      -- skriver ut ett uttrycks värde
+    | Repeat Expr.T Statement           -- upprepa statement tills Expr är sant
     deriving Show                       -- implementatio av show-klassen för Statement (värde till sträng)
 
 
@@ -40,6 +41,10 @@ buildWhile (cond, body) = While cond body
 readStatement = accept "read" -# word #- require ";" >-> Read
 
 writeStatement = accept "write" -# Expr.parse #- require ";" >-> Write
+
+repeatStatement = accept "repeat" -# parse #- require "until" # Expr.parse #- require ";" >-> buildRepeat
+buildRepeat :: (Statement, Expr.T) -> Statement
+buildRepeat (body, cond) = Repeat cond body
 
 
 ----- The Function exec (3d) -----
@@ -75,12 +80,16 @@ exec (Read var : stmts) dict (i:is) =
 exec (Write expr : stmts) dict input =
   Expr.value expr dict : exec stmts dict input  -- lägget till output:en först i listan och kör vidare med resten av statementsen
 
+exec (Repeat cond body : stmts) dict input =
+    if Expr.value cond dict <= 0
+    then exec (body : Repeat cond body : stmts) dict input
+    else exec (body : stmts) dict input
 
 
 ----- Define Parse (3c) -----
 
 instance Parse Statement where
-  parse = assignment ! skipStatement ! beginStatement ! ifStatement ! whileStatement ! readStatement ! writeStatement
+  parse = assignment ! skipStatement ! beginStatement ! ifStatement ! whileStatement ! readStatement ! writeStatement ! repeatStatement
   toString = toString' where
     toString' (Assignment v e) = v ++ " := " ++ Expr.toString e ++ ";\n"
     toString' Skip = "skip;\n"
@@ -95,6 +104,10 @@ instance Parse Statement where
         concatMap toString' [body]
     toString' (Read var) = "read " ++ var ++ ";\n"
     toString' (Write expr) = "write " ++ Expr.toString expr ++ ";\n"
+    toString' (Repeat cond body) = 
+        "repeat\n" ++
+        concatMap toString' [body] ++
+        "until " ++ Expr.toString cond ++ ";\n"
     toString' _ = error "Unknown statement type"
 
 statement :: Parser Statement

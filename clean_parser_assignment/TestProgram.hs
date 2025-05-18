@@ -1,7 +1,20 @@
 {- Test for Program -}
-module TestProgram where
 
 import Program
+
+main :: IO ()
+main = do
+
+    putStr (toString p)
+
+    print (Program.exec p [3,16])
+
+    print(Program.exec p1 [1024, 2])
+
+    --print rp
+    --print rp1
+
+
 p, p1 :: Program.T
 p = fromString  ("\
 \read k;\
@@ -33,8 +46,4 @@ p1 = fromString  ("\
 \  end\
 \write s;")
 
-sp = putStr (toString p)
 
-rp = Program.exec p [3,16]
-
-rp1 = Program.exec p1 [1024, 2]

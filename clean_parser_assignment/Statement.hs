@@ -4,7 +4,7 @@ import Prelude hiding (return, fail)
 import Parser hiding (T)
 import qualified Dictionary
 import qualified Expr
-import Data.Text.Internal.Fusion (Step(Skip))
+import Data.Text.Internal.Fusion hiding (Skip)--(Step(Skip))
 
 type T = Statement
 data Statement =
@@ -47,6 +47,10 @@ writeStatement = accept "write" -# Expr.parse #- require ";" >-> Write
 exec :: [T] -> Dictionary.T String Integer -> [Integer] -> [Integer]
 exec [] _ _ = []
 
+exec (Assignment var expr : stmts) dict input =
+    let newDict = Dictionary.insert (var, Expr.value expr dict) dict
+    in exec stmts newDict input
+
 exec (Skip : stmts) dict input = exec stmts dict input
 
 exec (Begin stmtsBlock : stmts) dict input = exec (stmtsBlock ++ stmts) dict input
@@ -72,14 +76,30 @@ exec (Write expr : stmts) dict input =
   Expr.value expr dict : exec stmts dict input  -- lägget till output:en först i listan och kör vidare med resten av statementsen
 
 
+
 ----- Define Parse (3c) -----
 
 instance Parse Statement where
   parse = assignment ! skipStatement ! beginStatement ! ifStatement ! whileStatement ! readStatement ! writeStatement
-  toString = error "Statement.toString not implemented"
+  toString = toString' where
+    toString' (Assignment v e) = v ++ " := " ++ Expr.toString e ++ ";\n"
+    toString' Skip = "skip;\n"
+    toString' (Begin stmts) = "begin\n" ++ concatMap toString' stmts ++ "end\n"
+    toString' (If cond thenStmts elseStmts) = 
+        "if " ++ Expr.toString cond ++ " then\n" ++
+        concatMap toString' [thenStmts] ++
+        "else\n" ++
+        concatMap toString' [elseStmts]
+    toString' (While cond body) = 
+        "while " ++ Expr.toString cond ++ " do\n" ++
+        concatMap toString' [body]
+    toString' (Read var) = "read " ++ var ++ ";\n"
+    toString' (Write expr) = "write " ++ Expr.toString expr ++ ";\n"
+    toString' _ = error "Unknown statement type"
 
 statement :: Parser Statement
 statement = parse
 
 statements :: Parser [Statement]
 statements = iter statement
+

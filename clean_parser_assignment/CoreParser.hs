@@ -13,9 +13,9 @@ class Parse a where
     fromString :: String -> a
     fromString cs =
         case parse cs of
-               Just(s, []) -> s
-               Just(s, cs) -> error ("garbage '"++cs++"'")
-               Nothing -> error "Nothing"
+            Just(s, []) -> s
+            Just(s, cs) -> error ("garbage '"++cs++"'")
+            Nothing -> error "Nothing"
     toString :: a -> String
 
 type Parser a = String -> Maybe (a, String)
@@ -32,8 +32,8 @@ fail cs = Nothing
 
 (!) :: Parser a -> Parser a -> Parser a
 (m ! n) cs = case m cs of
-             Nothing -> n cs 
-             mcs -> mcs
+    Nothing -> n cs 
+    mcs -> mcs
 
 (?) :: Parser a -> (a -> Bool) -> Parser a
 (m ? p) cs = 

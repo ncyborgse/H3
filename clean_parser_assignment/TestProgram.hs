@@ -5,7 +5,7 @@ import Program
 main :: IO ()
 main = do
 
-    --putStr (toString p)
+    putStr (toString p)
 
     print (Program.exec p [3,16])
 
@@ -59,5 +59,3 @@ p2 = fromString  ("\
 \  end\ 
 \until (0-n)+1;\
 \write s;")
-
-
